@@ -1,6 +1,6 @@
-# gulp-etl-tap-csv #
+# gulp-etl-target-csv #
 
-This plugin  converts CSV files to **gulp-etl** **Message Stream** files; originally adapted from the [gulp-etl-handlelines](https://github.com/gulpetl/gulp-etl-handlelines) model plugin. It is a **gulp-etl** wrapper for [csv-parse](https://csv.js.org/parse/).
+This plugin creates CSV files from **gulp-etl** **Message Stream** files; originally adapted from the [gulp-etl-handlelines](https://github.com/gulpetl/gulp-etl-handlelines) model plugin. It is a **gulp-etl** wrapper for [csv-stringify](https://csv.js.org/stringify/).
 
 This is a **[gulp-etl](https://gulpetl.com/)** plugin, and as such it is a [gulp](https://gulpjs.com/) plugin. **gulp-etl** plugins work with [ndjson](http://ndjson.org/) data streams/files which we call **Message Streams** and which are compliant with the [Singer specification](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#output). Message Streams look like this:
 
@@ -20,11 +20,11 @@ for each row instead of objects. A falsey value for columns will be overridden t
 
 ##### Sample gulpfile.js
 ```
-var tapCsv = require('../src/plugin').tapCsv
+var targetCsv = require('../src/plugin').targetCsv
 
 exports.default = function() {
     return src('data/*.csv')
-    .pipe(tapCsv({ columns:true }))
+    .pipe(targetCsv({ columns:true }))
     .pipe(rename({ extname: ".ndjson" })) // rename to *.ndjson
     .pipe(dest('output/'));
 }

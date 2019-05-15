@@ -1,4 +1,4 @@
-import tapCsv from '../src/plugin';
+import targetCsv from '../src/plugin';
 const from = require('from2');
 const Vinyl = require('vinyl');
 
@@ -11,7 +11,7 @@ describe('plugin tests', () => {
             contents: Buffer.from('carModel,price,color\n"Audi",10000,"blue"\n"BMW",15000,"red"')
         })
 
-        from.obj([fakeFile]).pipe(tapCsv({}))
+        from.obj([fakeFile]).pipe(targetCsv({}))
             .once('data', function (file: any) {
                 expect(Vinyl.isVinyl(file)).toBeTruthy()
                 expect(file.isBuffer()).toBeTruthy()
@@ -25,7 +25,7 @@ describe('plugin tests', () => {
             contents: Buffer.from('carModel,price,color\n"Audi",10000,"blue"\n"BMW",15000,"red"')
         })
 
-        from.obj([fakeFile]).pipe(tapCsv({info:true}))
+        from.obj([fakeFile]).pipe(targetCsv({info:true}))
             .once('data', function (file: any) {
                 expect(Vinyl.isVinyl(file)).toBeTruthy()
                 expect(file.isBuffer()).toBeTruthy()
@@ -39,7 +39,7 @@ describe('plugin tests', () => {
             path:"cars.csv",
             contents: Buffer.from('')
         })
-        from.obj([fakeFile]).pipe(tapCsv({}))
+        from.obj([fakeFile]).pipe(targetCsv({}))
             .once('data', function (file: any) {
                 expect(Vinyl.isVinyl(file)).toBeTruthy()
                 expect(file.isBuffer()).toBeTruthy()
@@ -54,7 +54,7 @@ describe('plugin tests', () => {
             contents: from(['carModel,price,color\n"Audi",10000,"blue"\n"BMW",15000,"red"'])
         })
         let result: string = '';
-        from.obj([fakeFile]).pipe(tapCsv({}))
+        from.obj([fakeFile]).pipe(targetCsv({}))
             .once('data', function (file: any) {
                 expect(Vinyl.isVinyl(file)).toBeTruthy()
                 expect(file.isStream()).toBeTruthy()
@@ -73,7 +73,7 @@ describe('plugin tests', () => {
             contents: from(['carModel,price,color\n"Audi",10000,"blue"\n"BMW",15000,"red"'])
         })
         let result: string = '';
-        from.obj([fakeFile]).pipe(tapCsv({raw:true}))
+        from.obj([fakeFile]).pipe(targetCsv({raw:true}))
             .once('data', function (file: any) {
                 expect(Vinyl.isVinyl(file)).toBeTruthy()
                 expect(file.isStream()).toBeTruthy()
@@ -92,7 +92,7 @@ describe('plugin tests', () => {
             contents: from([''])
         })
         let result: string = '';
-        from.obj([fakeFile]).pipe(tapCsv({}))
+        from.obj([fakeFile]).pipe(targetCsv({}))
             .once('data', function (file: any) {
                 expect(Vinyl.isVinyl(file)).toBeTruthy()
                 expect(file.isStream()).toBeTruthy()

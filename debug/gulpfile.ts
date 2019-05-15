@@ -1,5 +1,5 @@
 let gulp = require('gulp')
-import tapCsv from '../src/plugin'
+import targetCsv from '../src/plugin'
 
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger('gulpfile')
@@ -24,10 +24,10 @@ function switchToBuffer(callback: any) {
   callback();
 }
 
-function runTapCsv(callback: any) {
+function runtargetCsv(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
-  return gulp.src('../testdata/*.csv',{buffer:gulpBufferMode})
+  return gulp.src('../testdata/*.ndjson',{buffer:gulpBufferMode})
     .pipe(errorHandler(function(err:any) {
       log.error('Error: ' + err)
       callback(err)
@@ -35,9 +35,9 @@ function runTapCsv(callback: any) {
     .on('data', function (file:Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })    
-    .pipe(tapCsv({raw:true/*, info:true */}))
+    .pipe(targetCsv({header:true, quoted_string:true}))
     .pipe(rename({
-      extname: ".ndjson",
+      extname: ".csv",
     }))      
     .pipe(gulp.dest('../testdata/processed'))
     .on('data', function (file:Vinyl) {
@@ -63,5 +63,5 @@ export function csvParseWithoutGulp(callback: any) {
   
 }
 
-exports.default = gulp.series(runTapCsv)
-exports.runTapCsvBuffer = gulp.series(switchToBuffer, runTapCsv)
+exports.default = gulp.series(runtargetCsv)
+exports.runtargetCsvBuffer = gulp.series(switchToBuffer, runtargetCsv)

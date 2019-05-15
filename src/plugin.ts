@@ -7,7 +7,8 @@ import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 
-const parse = require('csv-parse')
+const stringify = require('csv-stringify')
+const split = require('split2')
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject:Object, streamName: string) : any {
@@ -17,28 +18,36 @@ function createRecord(recordObject:Object, streamName: string) : any {
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-export default function tapCsv(configObj: any) {
+export default function targetCsv(configObj: any) {
   if (!configObj) configObj = {}
-  if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
+//  if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
 
   // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
   const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
     const self = this
     let returnErr: any = null
-    const parser = parse(configObj)
+    let stringifier
+    try {
+      stringifier = stringify(configObj)
+    }
+    catch (err) {
+      returnErr = new PluginError(PLUGIN_NAME, err);
+    }
 
     // post-process line object
     const handleLine = (lineObj: any, _streamName : string): object | null => {
-      if (parser.options.raw || parser.options.info) {
-        let newObj = createRecord(lineObj.record, _streamName)
-        if (lineObj.raw) newObj.raw = lineObj.raw
-        if (lineObj.info) newObj.info = lineObj.info
-        lineObj = newObj
-      }
-      else {
-        lineObj = createRecord(lineObj, _streamName)
-      }
+      // if (stringifier.options.raw || stringifier.options.info) {
+      //   let newObj = createRecord(lineObj.record, _streamName)
+      //   if (lineObj.raw) newObj.raw = lineObj.raw
+      //   if (lineObj.info) newObj.info = lineObj.info
+      //   lineObj = newObj
+      // }
+      // else {
+        // lineObj = createRecord(lineObj, _streamName)
+      // }
+
+lineObj = lineObj.record
       return lineObj
     }
 
@@ -46,15 +55,17 @@ export default function tapCsv(configObj: any) {
 
       let transformer = through2.obj(); // new transform stream, in object mode
   
-      // transformer is designed to follow csv-parse, which emits objects, so dataObj is an Object. We will finish by converting dataObj to a text line
-      transformer._transform = function (dataObj: Object, encoding: string, callback: Function) {
+      // transformer is designed to follow split2, which emits one line at a time, so dataObj is an Object. We will finish by converting dataObj to a text line
+      transformer._transform = function (dataLine: string, encoding: string, callback: Function) {
         let returnErr: any = null
         try {
+          let dataObj
+          if (dataLine.trim() != "") dataObj = JSON.parse(dataLine)
           let handledObj = handleLine(dataObj, streamName)
           if (handledObj) {
             let handledLine = JSON.stringify(handledObj)
             log.debug(handledLine)
-            this.push(handledLine + '\n');
+            this.push(handledObj);
           }
         } catch (err) {
           returnErr = new PluginError(PLUGIN_NAME, err);
@@ -69,14 +80,14 @@ export default function tapCsv(configObj: any) {
     // set the stream name to the file name (without extension)
     let streamName : string = file.stem
 
-    if (file.isNull()) {
+    if (file.isNull() || returnErr) {
       // return empty file
       return cb(returnErr, file)
     }
     else if (file.isBuffer()) {
 
 
-      parse(file.contents as Buffer, configObj, function(err:any, linesArray : []){
+      stringifier(file.contents as Buffer, configObj, function(err:any, linesArray : []){
         // this callback function runs when the parser finishes its work, returning an array parsed lines 
         let tempLine: any
         let resultArray = [];
@@ -106,7 +117,10 @@ export default function tapCsv(configObj: any) {
     }
     else if (file.isStream()) {
       file.contents = file.contents
-        .pipe(parser)
+        // split plugin will split the file into lines
+        .pipe(split())
+        .pipe(newTransformer(streamName))
+        .pipe(stringifier)
         .on('end', function () {
 
           // DON'T CALL THIS HERE. It MAY work, if the job is small enough. But it needs to be called after the stream is SET UP, not when the streaming is DONE.
@@ -123,7 +137,6 @@ export default function tapCsv(configObj: any) {
           log.error(err)
           self.emit('error', new PluginError(PLUGIN_NAME, err));
         })
-        .pipe(newTransformer(streamName))
 
       // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')    
