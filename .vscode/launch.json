@@ -47,12 +47,12 @@
             "env": {"DEBUG_LEVEL":"debug"}
         },
         {
-            "name": "csvParseWithoutGulp",
+            "name": "csvStringifyWithoutGulp",
             "type": "node",
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
-            "args": ["--gulpfile", "./debug/gulpfile.ts", "csvParseWithoutGulp"],
+            "args": ["--gulpfile", "./debug/gulpfile.ts", "csvStringifyWithoutGulp"],
             "cwd": "${workspaceRoot}",
             "runtimeArgs": [
                 "--nolazy", "-r", "ts-node/register"

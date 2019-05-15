@@ -35,19 +35,9 @@ export default function targetCsv(configObj: any) {
       returnErr = new PluginError(PLUGIN_NAME, err);
     }
 
-    // post-process line object
+    // preprocess line object
     const handleLine = (lineObj: any, _streamName : string): object | null => {
-      // if (stringifier.options.raw || stringifier.options.info) {
-      //   let newObj = createRecord(lineObj.record, _streamName)
-      //   if (lineObj.raw) newObj.raw = lineObj.raw
-      //   if (lineObj.info) newObj.info = lineObj.info
-      //   lineObj = newObj
-      // }
-      // else {
-        // lineObj = createRecord(lineObj, _streamName)
-      // }
-
-lineObj = lineObj.record
+      lineObj = lineObj.record
       return lineObj
     }
 
@@ -85,34 +75,39 @@ lineObj = lineObj.record
       return cb(returnErr, file)
     }
     else if (file.isBuffer()) {
-
-
-      stringifier(file.contents as Buffer, configObj, function(err:any, linesArray : []){
-        // this callback function runs when the parser finishes its work, returning an array parsed lines 
+      try {
+        const linesArray = (file.contents as Buffer).toString().split('\n')
         let tempLine: any
         let resultArray = [];
         // we'll call handleLine on each line
         for (let dataIdx in linesArray) {
           try {
-            let lineObj = linesArray[dataIdx]
+            let lineObj = JSON.parse(linesArray[dataIdx])
             tempLine = handleLine(lineObj, streamName)
             if (tempLine){
               let tempStr = JSON.stringify(tempLine)
               log.debug(tempStr)
-              resultArray.push(tempStr);
+              resultArray.push(tempLine);
             }
           } catch (err) {
             returnErr = new PluginError(PLUGIN_NAME, err);
           }
         }
-        let data:string = resultArray.join('\n')
 
-        file.contents = Buffer.from(data)
-        
-        // we are done with file processing. Pass the processed file along
-        log.debug('calling callback')    
-        cb(returnErr, file);    
-      })
+        stringify(resultArray, configObj, function(err:any, data:string){
+          // this callback function runs when the stringify finishes its work, returning an array of CSV lines
+          if (err) returnErr = new PluginError(PLUGIN_NAME, err)
+          else file.contents = Buffer.from(data)
+          
+          // we are done with file processing. Pass the processed file along
+          log.debug('calling callback')    
+          cb(returnErr, file);    
+        })
+      }
+      catch (err) {
+        returnErr = new PluginError(PLUGIN_NAME, err);
+        return cb(returnErr, file)        
+      }
 
     }
     else if (file.isStream()) {

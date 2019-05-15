@@ -50,15 +50,24 @@ function runtargetCsv(callback: any) {
 
 }
 
-export function csvParseWithoutGulp(callback: any) {
+export function csvStringifyWithoutGulp(callback: any) {
 
-  const parse = require('csv-parse')
+  const stringify = require('csv-stringify')
+  const transform = require('stream-transform')
+  const split = require('split2')
 
-  var parser = parse({delimiter: ',', columns:true});
+  var stringifier = stringify({});
   
-  require('fs').createReadStream('../testdata/cars.csv').pipe(parser)
+  require('fs').createReadStream('../testdata/cars.ndjson', {encoding:"utf8"})
+  .pipe(split()) // split the stream into individual lines
+  .pipe(transform(function(dataLine:string) {
+    // parse each text line into an object and return the record property
+    const dataObj = JSON.parse(dataLine)
+    return dataObj.record
+  }))
+  .pipe(stringifier)
   .on("data",(data:any)=>{
-    console.log(data)
+    console.log((data as Buffer).toString())
   });
   
 }
