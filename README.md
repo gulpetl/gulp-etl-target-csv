@@ -38,7 +38,7 @@ exports.default = function() {
 * Clone this repo and run `npm install` to install npm packages
 * Debug: with [VScode](https://code.visualstudio.com/download) use `Open Folder` to open the project folder, then hit F5 to debug. This runs without compiling to javascript using [ts-node](https://www.npmjs.com/package/ts-node)
 * Test: `npm test` or `npm t`
-* Compile to javascript: `npm run build-codeonly`
+* Compile to javascript: `npm run build`
 * More options are included from [TypeScript Library Starter](https://github.com/alexjoverm/typescript-library-starter.git) and are documented [here](starter-README.md)
 
 ### Testing

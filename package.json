@@ -9,11 +9,17 @@
     "dist"
   ],
   "scripts": {
-    "build-codeonly": "tsc && tsc --module commonjs --outDir dist/lib",
+    "build": "tsc && tsc --module commonjs --outDir dist/lib",
     "test": "jest"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "peterl@sbcotton.com",
+  "license": "MIT",
+  "keywords": [
+    "gulpplugin",
+    "csv",
+    "gulp-etl"
+  ],
+  "homepage": "https://gulpetl.com",
   "dependencies": {
     "csv-stringify": "^5.3.0",
     "from2": "^2.3.0",
