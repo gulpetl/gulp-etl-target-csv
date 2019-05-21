@@ -15,18 +15,25 @@ This is a **[gulp-etl](https://gulpetl.com/)** plugin, and as such it is a [gulp
 
 ### Usage
 **gulp-etl** plugins accept a configObj as the first parameter; the configObj
-will contain any info the plugin needs. For this plugin the configObj is the "Options" object for [csv-parse](https://csv.js.org/parse/), described [here](https://csv.js.org/parse/options/); the only difference is that the "columns" property cannot be falsey, since it would result in arrays being returned
-for each row instead of objects. A falsey value for columns will be overridden to true.
+will contain any info the plugin needs. For this plugin the configObj is the "Options" object for [csv-stringify](https://csv.js.org/stringify/), described [here](https://csv.js.org/stringify/options/).
 
 ##### Sample gulpfile.js
 ```
-var targetCsv = require('../src/plugin').targetCsv
+var gulp = require('gulp')
+var rename = require('gulp-rename')
+var targetCsv = require('gulp-etl-target-csv').targetCsv
 
 exports.default = function() {
-    return src('data/*.csv')
-    .pipe(targetCsv({ columns:true }))
-    .pipe(rename({ extname: ".ndjson" })) // rename to *.ndjson
-    .pipe(dest('output/'));
+    return gulp.src('data/*.ndjson')
+    .on('data', function (file) {
+        console.log('Starting processing on ' + file.basename)
+    })  
+    .pipe(targetCsv({header:true}))
+    .pipe(rename({ extname: ".csv" })) // rename to *.csv
+    .on('data', function (file) {
+        console.log('Done processing on ' + file.basename)
+    })  
+    .pipe(gulp.dest('data/'));
 }
 ```
 ### Quick Start for Coding on This Plugin
@@ -39,7 +46,6 @@ exports.default = function() {
 * Debug: with [VScode](https://code.visualstudio.com/download) use `Open Folder` to open the project folder, then hit F5 to debug. This runs without compiling to javascript using [ts-node](https://www.npmjs.com/package/ts-node)
 * Test: `npm test` or `npm t`
 * Compile to javascript: `npm run build`
-* More options are included from [TypeScript Library Starter](https://github.com/alexjoverm/typescript-library-starter.git) and are documented [here](starter-README.md)
 
 ### Testing
 
