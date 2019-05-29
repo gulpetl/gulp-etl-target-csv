@@ -1,6 +1,6 @@
 {
   "name": "gulp-etl-target-csv",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": "https://github.com/gulpetl/gulp-etl-target-csv",
   "description": "Convert CSV files to JSON compatible with gulp-etl",
   "main": "dist/js/plugin.js",

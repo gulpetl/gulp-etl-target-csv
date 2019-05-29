@@ -82,6 +82,7 @@ export function targetCsv(configObj: any) {
         // we'll call handleLine on each line
         for (let dataIdx in linesArray) {
           try {
+            if (linesArray[dataIdx].trim() == "") continue
             let lineObj = JSON.parse(linesArray[dataIdx])
             tempLine = handleLine(lineObj, streamName)
             if (tempLine){
