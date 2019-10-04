@@ -7,6 +7,7 @@ const PLUGIN_NAME = module.exports.name;
 const loglevel = require("loglevel");
 const log = loglevel.getLogger(PLUGIN_NAME); // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn'));
+const replaceExt = require("replace-ext");
 const stringify = require('csv-stringify');
 const split = require('split2');
 /** wrap incoming recordObject in a Singer RECORD Message object*/
@@ -19,13 +20,15 @@ and like all gulp-etl plugins it accepts a configObj as its first parameter */
 function targetCsv(configObj) {
     if (!configObj)
         configObj = {};
-    //  if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
+    if (configObj.header === undefined)
+        configObj.header = true; // we default header to true, the expected default behavior for general usage
     // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
     // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
     const strm = through2.obj(function (file, encoding, cb) {
         const self = this;
         let returnErr = null;
         let stringifier;
+        file.path = replaceExt(file.path, '.csv');
         try {
             stringifier = stringify(configObj);
         }

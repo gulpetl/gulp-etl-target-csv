@@ -5,7 +5,8 @@ const pkginfo = require('pkginfo')(module); // project package.json info into mo
 const PLUGIN_NAME = module.exports.name;
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
-log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
+log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
+import replaceExt = require('replace-ext')
 
 const stringify = require('csv-stringify')
 const split = require('split2')
@@ -20,7 +21,7 @@ https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#w
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
 export function targetCsv(configObj: any) {
   if (!configObj) configObj = {}
-//  if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
+  if (configObj.header === undefined) configObj.header = true // we default header to true, the expected default behavior for general usage
 
   // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
@@ -28,6 +29,9 @@ export function targetCsv(configObj: any) {
     const self = this
     let returnErr: any = null
     let stringifier
+    
+    file.path=replaceExt(file.path, '.csv')
+
     try {
       stringifier = stringify(configObj)
     }

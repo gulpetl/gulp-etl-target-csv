@@ -3,12 +3,11 @@ import {targetCsv} from '../src/plugin'
 
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger('gulpfile')
-log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
+log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
 // if needed, you can control the plugin's logging level separately from 'gulpfile' logging above
 // const pluginLog = loglevel.getLogger(PLUGIN_NAME)
 // pluginLog.setLevel('debug')
 
-import * as rename from 'gulp-rename'
 const errorHandler = require('gulp-error-handle'); // handle all errors in one handler, but still stop the stream if there are errors
 
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
@@ -35,10 +34,7 @@ function runtargetCsv(callback: any) {
     .on('data', function (file:Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })    
-    .pipe(targetCsv({header:true, quoted_string:true}))
-    .pipe(rename({
-      extname: ".csv",
-    }))      
+    .pipe(targetCsv({quoted_string:true}))
     .pipe(gulp.dest('../testdata/processed'))
     .on('data', function (file:Vinyl) {
       log.info('Finished processing on ' + file.basename)
