@@ -10,45 +10,62 @@ import replaceExt = require('replace-ext')
 
 const stringify = require('csv-stringify')
 const split = require('split2')
+import merge from 'merge';
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
-function createRecord(recordObject:Object, streamName: string) : any {
-  return {type:"RECORD", stream:streamName, record:recordObject}
+function createRecord(recordObject: Object, streamName: string): any {
+  return { type: "RECORD", stream: streamName, record: recordObject }
 }
 
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-export function targetCsv(configObj: any) {
-  if (!configObj) configObj = {}
-  if (configObj.header === undefined) configObj.header = true // we default header to true, the expected default behavior for general usage
+export function targetCsv(origConfigObj: any) {
 
   // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
   const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
+
+    let configObj;
+    try {
+      if (file.data) {
+        // look for a property based on our plugin's name; assumes a complex object meant for multiple plugins
+        let dataObj = file.data[PLUGIN_NAME];
+        // if we didn't find a config above, use the entire file.data object as our config
+        if (!dataObj) dataObj = file.data;
+        // merge file.data config into our passed-in origConfigObj
+        // merge.recursive(origConfigObj, dataObj); // <-- huge bug: can't mess with origConfigObj, because changes there will bleed into subsequent calls
+        configObj = merge.recursive(true, origConfigObj, dataObj);
+      }
+      else
+        configObj = merge.recursive(true, origConfigObj);
+    }
+    catch { }
+    if (configObj.header === undefined) configObj.header = true // we default header to true, the expected default behavior for general usage
+
     const self = this
     let returnErr: any = null
     let stringifier
-    
-    file.path=replaceExt(file.path, '.csv')
+
+    file.path = replaceExt(file.path, '.csv')
 
     try {
       stringifier = stringify(configObj)
     }
-    catch (err) {
+    catch (err: any) {
       returnErr = new PluginError(PLUGIN_NAME, err);
     }
 
     // preprocess line object
-    const handleLine = (lineObj: any, _streamName : string): object | null => {
+    const handleLine = (lineObj: any, _streamName: string): object | null => {
       lineObj = lineObj.record
       return lineObj
     }
 
-    function newTransformer(streamName : string) {
+    function newTransformer(streamName: string) {
 
       let transformer = through2.obj(); // new transform stream, in object mode
-  
+
       // transformer is designed to follow split2, which emits one line at a time, so dataObj is an Object. We will finish by converting dataObj to a text line
       transformer._transform = function (dataLine: string, encoding: string, callback: Function) {
         let returnErr: any = null
@@ -61,18 +78,18 @@ export function targetCsv(configObj: any) {
             log.debug(handledLine)
             this.push(handledObj);
           }
-        } catch (err) {
+        } catch (err: any) {
           returnErr = new PluginError(PLUGIN_NAME, err);
         }
-  
+
         callback(returnErr)
       }
-  
+
       return transformer
     }
 
     // set the stream name to the file name (without extension)
-    let streamName : string = file.stem
+    let streamName: string = file.stem
 
     if (file.isNull() || returnErr) {
       // return empty file
@@ -89,29 +106,29 @@ export function targetCsv(configObj: any) {
             if (linesArray[dataIdx].trim() == "") continue
             let lineObj = JSON.parse(linesArray[dataIdx])
             tempLine = handleLine(lineObj, streamName)
-            if (tempLine){
+            if (tempLine) {
               let tempStr = JSON.stringify(tempLine)
               log.debug(tempStr)
               resultArray.push(tempLine);
             }
-          } catch (err) {
+          } catch (err: any) {
             returnErr = new PluginError(PLUGIN_NAME, err);
           }
         }
 
-        stringify(resultArray, configObj, function(err:any, data:string){
+        stringify(resultArray, configObj, function (err: any, data: string) {
           // this callback function runs when the stringify finishes its work, returning an array of CSV lines
           if (err) returnErr = new PluginError(PLUGIN_NAME, err)
           else file.contents = Buffer.from(data)
-          
+
           // we are done with file processing. Pass the processed file along
-          log.debug('calling callback')    
-          cb(returnErr, file);    
+          log.debug('calling callback')
+          cb(returnErr, file);
         })
       }
-      catch (err) {
+      catch (err: any) {
         returnErr = new PluginError(PLUGIN_NAME, err);
-        return cb(returnErr, file)        
+        return cb(returnErr, file)
       }
 
     }
@@ -139,7 +156,7 @@ export function targetCsv(configObj: any) {
         })
 
       // after our stream is set up (not necesarily finished) we call the callback
-      log.debug('calling callback')    
+      log.debug('calling callback')
       cb(returnErr, file);
     }
 

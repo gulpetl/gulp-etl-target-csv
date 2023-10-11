@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.targetCsv = void 0;
 const through2 = require('through2');
 const PluginError = require("plugin-error");
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
@@ -10,6 +11,7 @@ log.setLevel((process.env.DEBUG_LEVEL || 'warn'));
 const replaceExt = require("replace-ext");
 const stringify = require('csv-stringify');
 const split = require('split2');
+const merge_1 = require("merge");
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject, streamName) {
     return { type: "RECORD", stream: streamName, record: recordObject };
@@ -17,14 +19,28 @@ function createRecord(recordObject, streamName) {
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-function targetCsv(configObj) {
-    if (!configObj)
-        configObj = {};
-    if (configObj.header === undefined)
-        configObj.header = true; // we default header to true, the expected default behavior for general usage
+function targetCsv(origConfigObj) {
     // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
     // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
     const strm = through2.obj(function (file, encoding, cb) {
+        let configObj;
+        try {
+            if (file.data) {
+                // look for a property based on our plugin's name; assumes a complex object meant for multiple plugins
+                let dataObj = file.data[PLUGIN_NAME];
+                // if we didn't find a config above, use the entire file.data object as our config
+                if (!dataObj)
+                    dataObj = file.data;
+                // merge file.data config into our passed-in origConfigObj
+                // merge.recursive(origConfigObj, dataObj); // <-- huge bug: can't mess with origConfigObj, because changes there will bleed into subsequent calls
+                configObj = merge_1.default.recursive(true, origConfigObj, dataObj);
+            }
+            else
+                configObj = merge_1.default.recursive(true, origConfigObj);
+        }
+        catch (_a) { }
+        if (configObj.header === undefined)
+            configObj.header = true; // we default header to true, the expected default behavior for general usage
         const self = this;
         let returnErr = null;
         let stringifier;

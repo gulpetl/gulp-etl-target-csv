@@ -1,5 +1,5 @@
 let gulp = require('gulp')
-import {targetCsv} from '../src/plugin'
+import { targetCsv } from '../src/plugin'
 
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger('gulpfile')
@@ -13,7 +13,7 @@ const errorHandler = require('gulp-error-handle'); // handle all errors in one h
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
 const PLUGIN_NAME = module.exports.name;
 
-import Vinyl = require('vinyl') 
+import Vinyl from 'vinyl'
 
 let gulpBufferMode = false;
 
@@ -26,19 +26,28 @@ function switchToBuffer(callback: any) {
 function runtargetCsv(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
-  return gulp.src('../testdata/*.ndjson',{buffer:gulpBufferMode})
-    .pipe(errorHandler(function(err:any) {
+  return gulp.src('../testdata/*.ndjson', { buffer: gulpBufferMode })
+    .on('data', function (file: Vinyl) {
+      log.info('Adding options via gulp-data API (file.data) to ' + file.basename + "...")
+      file.data = { header: false }
+    })
+    .on('data', function (file: Vinyl) {
+      log.info('...or, setting file.data this way allows you to set options for multiple plugins in the same pipeline without conflicts')
+      let allOptions = file.data || {}; // set allOptions to existing file.data or, if none exists, set to an empty object
+      allOptions["gulp-etl-target-csv"] = { header: true }; // set options on file.data for a specific plugin. This will override the more general settings above.
+    })
+    .pipe(errorHandler(function (err: any) {
       log.error('Error: ' + err)
       callback(err)
     }))
-    .on('data', function (file:Vinyl) {
+    .on('data', function (file: Vinyl) {
       log.info('Starting processing on ' + file.basename)
-    })    
-    .pipe(targetCsv({quoted_string:true}))
+    })
+    .pipe(targetCsv({ quoted_string: true }))
     .pipe(gulp.dest('../testdata/processed'))
-    .on('data', function (file:Vinyl) {
+    .on('data', function (file: Vinyl) {
       log.info('Finished processing on ' + file.basename)
-    })    
+    })
     .on('end', function () {
       log.info('gulp task complete')
       callback()
@@ -53,19 +62,19 @@ export function csvStringifyWithoutGulp(callback: any) {
   const split = require('split2')
 
   var stringifier = stringify({});
-  
-  require('fs').createReadStream('../testdata/cars.ndjson', {encoding:"utf8"})
-  .pipe(split()) // split the stream into individual lines
-  .pipe(transform(function(dataLine:string) {
-    // parse each text line into an object and return the record property
-    const dataObj = JSON.parse(dataLine)
-    return dataObj.record
-  }))
-  .pipe(stringifier)
-  .on("data",(data:any)=>{
-    console.log((data as Buffer).toString())
-  });
-  
+
+  require('fs').createReadStream('../testdata/cars.ndjson', { encoding: "utf8" })
+    .pipe(split()) // split the stream into individual lines
+    .pipe(transform(function (dataLine: string) {
+      // parse each text line into an object and return the record property
+      const dataObj = JSON.parse(dataLine)
+      return dataObj.record
+    }))
+    .pipe(stringifier)
+    .on("data", (data: any) => {
+      console.log((data as Buffer).toString())
+    });
+
 }
 
 exports.default = gulp.series(runtargetCsv)
