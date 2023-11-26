@@ -23,6 +23,12 @@ function switchToBuffer(callback: any) {
   callback();
 }
 
+/**
+ * Run this plugin under gulp, in either "streaming" or "buffer" mode depending on `gulpBufferMode`,
+ * which is used to set the `buffer` option passed to [gulp.src](https://gulpjs.com/docs/en/api/src#options)
+ * @param callback gulp passes in this callback; we can call it when our stream is set up, but instead we return the stream itself
+ * @returns the gulp stream we've set up (which is probably not finished); learn about [gulp async completion](https://gulpjs.com/docs/en/getting-started/async-completion)
+ */
 function runtargetCsv(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
@@ -36,45 +42,27 @@ function runtargetCsv(callback: any) {
       let allOptions = file.data || {}; // set allOptions to existing file.data or, if none exists, set to an empty object
       allOptions["gulp-etl-target-csv"] = { header: true }; // set options on file.data for a specific plugin. This will override the more general settings above.
     })
-    .pipe(errorHandler(function (err: any) {
-      log.error('Error: ' + err)
-      callback(err)
-    }))
     .on('data', function (file: Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })
     .pipe(targetCsv({ quoted_string: true }))
+    // errorHandler isn't working..? For now we use ".on('error')"
+    // .pipe(errorHandler(function (err: any) {
+    //   log.error('Error: ' + err)
+    //   callback(err)
+    // }))
+    .on('error', function (err:any) {
+      log.error('OOPS! ' + err)
+    })
     .pipe(gulp.dest('../testdata/processed'))
     .on('data', function (file: Vinyl) {
       log.info('Finished processing on ' + file.basename)
     })
     .on('end', function () {
       log.info('gulp task complete')
-      callback()
     })
 
-}
-
-export function csvStringifyWithoutGulp(callback: any) {
-
-  const stringify = require('csv-stringify')
-  const transform = require('stream-transform')
-  const split = require('split2')
-
-  var stringifier = stringify({});
-
-  require('fs').createReadStream('../testdata/cars.ndjson', { encoding: "utf8" })
-    .pipe(split()) // split the stream into individual lines
-    .pipe(transform(function (dataLine: string) {
-      // parse each text line into an object and return the record property
-      const dataObj = JSON.parse(dataLine)
-      return dataObj.record
-    }))
-    .pipe(stringifier)
-    .on("data", (data: any) => {
-      console.log((data as Buffer).toString())
-    });
-
+    // callback(); // we could call callback, but we've returned the stream instead; see https://gulpjs.com/docs/en/getting-started/async-completion
 }
 
 exports.default = gulp.series(runtargetCsv)

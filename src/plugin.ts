@@ -8,13 +8,26 @@ const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on th
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
 import replaceExt = require('replace-ext')
 
-const stringify = require('csv-stringify')
+const csvStringify = require('csv-stringify')
 const split = require('split2')
+const transform = require('stream-transform')
 import merge from 'merge';
 
-/** wrap incoming recordObject in a Singer RECORD Message object*/
-function createRecord(recordObject: Object, streamName: string): any {
-  return { type: "RECORD", stream: streamName, record: recordObject }
+
+/** parse a MessageStream RECORD text line into an object and return the `record` property */
+export function extractRecordObjFromMessageString (messageStr: string) : object | null {    
+  if (messageStr.trim() == "") return null;
+  
+  let recordObj;
+  try {
+    recordObj = JSON.parse(messageStr);
+    log.debug(messageStr);
+  } 
+  catch (err: any) {
+    throw new Error("failed to parse with error: '" + err.message + "':\n" + messageStr);
+  }
+    
+  return recordObj.record
 }
 
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
@@ -45,51 +58,8 @@ export function targetCsv(origConfigObj: any) {
 
     const self = this
     let returnErr: any = null
-    let stringifier
 
     file.path = replaceExt(file.path, '.csv')
-
-    try {
-      stringifier = stringify(configObj)
-    }
-    catch (err: any) {
-      returnErr = new PluginError(PLUGIN_NAME, err);
-    }
-
-    // preprocess line object
-    const handleLine = (lineObj: any, _streamName: string): object | null => {
-      lineObj = lineObj.record
-      return lineObj
-    }
-
-    function newTransformer(streamName: string) {
-
-      let transformer = through2.obj(); // new transform stream, in object mode
-
-      // transformer is designed to follow split2, which emits one line at a time, so dataObj is an Object. We will finish by converting dataObj to a text line
-      transformer._transform = function (dataLine: string, encoding: string, callback: Function) {
-        let returnErr: any = null
-        try {
-          let dataObj
-          if (dataLine.trim() != "") dataObj = JSON.parse(dataLine)
-          let handledObj = handleLine(dataObj, streamName)
-          if (handledObj) {
-            let handledLine = JSON.stringify(handledObj)
-            log.debug(handledLine)
-            this.push(handledObj);
-          }
-        } catch (err: any) {
-          returnErr = new PluginError(PLUGIN_NAME, err);
-        }
-
-        callback(returnErr)
-      }
-
-      return transformer
-    }
-
-    // set the stream name to the file name (without extension)
-    let streamName: string = file.stem
 
     if (file.isNull() || returnErr) {
       // return empty file
@@ -97,26 +67,18 @@ export function targetCsv(origConfigObj: any) {
     }
     else if (file.isBuffer()) {
       try {
-        const linesArray = (file.contents as Buffer).toString().split('\n')
-        let tempLine: any
-        let resultArray = [];
-        // we'll call handleLine on each line
+        const linesArray = (file.contents as Buffer).toString().split('\n');
+        let recordObjectArr = [];
+        // call extractRecordObjFromMessageString on each line
         for (let dataIdx in linesArray) {
-          try {
-            if (linesArray[dataIdx].trim() == "") continue
-            let lineObj = JSON.parse(linesArray[dataIdx])
-            tempLine = handleLine(lineObj, streamName)
-            if (tempLine) {
-              let tempStr = JSON.stringify(tempLine)
-              log.debug(tempStr)
-              resultArray.push(tempLine);
-            }
-          } catch (err: any) {
-            returnErr = new PluginError(PLUGIN_NAME, err);
-          }
+          let tempLine = extractRecordObjFromMessageString(linesArray[dataIdx]);
+          if (!tempLine) 
+            continue;
+
+          recordObjectArr.push(tempLine);
         }
 
-        stringify(resultArray, configObj, function (err: any, data: string) {
+        csvStringify(recordObjectArr, configObj, function (err: any, data: string) {
           // this callback function runs when the stringify finishes its work, returning an array of CSV lines
           if (err) returnErr = new PluginError(PLUGIN_NAME, err)
           else file.contents = Buffer.from(data)
@@ -136,10 +98,9 @@ export function targetCsv(origConfigObj: any) {
       file.contents = file.contents
         // split plugin will split the file into lines
         .pipe(split())
-        .pipe(newTransformer(streamName))
-        .pipe(stringifier)
+        // use a node transform stream to parse each line into an object and extract its main `record` property
+        .pipe(transform(extractRecordObjFromMessageString))
         .on('end', function () {
-
           // DON'T CALL THIS HERE. It MAY work, if the job is small enough. But it needs to be called after the stream is SET UP, not when the streaming is DONE.
           // Calling the callback here instead of below may result in data hanging in the stream--not sure of the technical term, but dest() creates no file, or the file is blank
           // cb(returnErr, file);
@@ -154,6 +115,7 @@ export function targetCsv(origConfigObj: any) {
           log.error(err)
           self.emit('error', new PluginError(PLUGIN_NAME, err));
         })
+        .pipe(csvStringify(configObj))
 
       // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')
