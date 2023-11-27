@@ -20,6 +20,11 @@
     "gulp-etl",
     "data"
   ],
+  "node-red": {
+    "nodes": {
+      "gulpetl-target-csv": "gulpetl-target-csv.js"
+    }
+  },
   "homepage": "https://gulpetl.com",
   "dependencies": {
     "csv-stringify": "^5.6.5",
