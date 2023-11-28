@@ -10,6 +10,9 @@
   ],
   "scripts": {
     "build": "tsc && tsc --module commonjs --outDir dist/lib",
+    "prebuild": "npm run clean",
+    "clean": "rimraf dist/*",
+    "bump": "npm version patch && git push --tags origin master",
     "test": "jest"
   },
   "author": "peterl@sbcotton.com",

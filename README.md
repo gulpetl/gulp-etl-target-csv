@@ -43,6 +43,12 @@ allows data/options from the pipeline to be used to create options passed to thi
 
 See the demonstration in `debug/gulpfile.ts` for usage examples.
 
+### Node-RED ###
+[Node-RED](https://nodered.org/) is a low-code, visual programming environment for event-driven applications. We're experimenting with it, and this plugin is now available as a Node-RED node. Since we're still in test mode, we aren't yet available in Node-RED's Palette; add to Node-RED by going to your user folder and typing:
+```
+npm install gulp-etl-target-csv
+```
+
 ### Quick Start for Coding on This Plugin ##
 
 * Dependencies:

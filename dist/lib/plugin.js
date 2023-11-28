@@ -98,7 +98,7 @@ function targetCsv(origConfigObj) {
             else
                 configObj = merge_1.default.recursive(true, origConfigObj);
         }
-        catch { }
+        catch (_a) { }
         if (configObj.header === undefined)
             configObj.header = true; // we default header to true, the expected default behavior for general usage
         const self = this;
