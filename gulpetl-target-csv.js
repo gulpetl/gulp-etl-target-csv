@@ -7,7 +7,7 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     var node = this;
     node.on('input', function (msg) {
-      targetCsv.csvStringifyNdjson(msg.payload/*, configObj*/)
+      targetCsv.csvStringifyNdjson(msg.payload, msg.config)
         .then((data) => {
           msg.payload = data;
         })

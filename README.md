@@ -49,6 +49,41 @@ See the demonstration in `debug/gulpfile.ts` for usage examples.
 npm install gulp-etl-target-csv
 ```
 
+#### Demo flow ####
+
+![Demo flow](./resources/demoflow.png)
+
+#### Set data ####
+
+For our demo, we set the data in a "Set data" Template node. The data should be valid NDJSON records, output as plain text:
+
+``` ndjson
+{"type":"RECORD","stream":"cars","record":{"carModel":"Audi","price":"10000","color":"blue"}}
+{"type":"RECORD","stream":"cars","record":{"carModel":"BMW","price":"15000","color":"red"}}
+```
+
+#### Set config ####
+
+The config is also set in a Template node. Identical to the `configObj` above, it is the "Options" object for [csv-stringify](https://csv.js.org/stringify/), described [here](https://csv.js.org/stringify/options/), and you can set any of the properties described.
+
+![Config template](./resources/editconfig.png)
+
+
+Copy this flow here for import in Node-RED under `Import`
+
+``` json
+[{"id":"8b709063b40e4118","type":"template","z":"cd67672e19ab739a","name":"Set data","field":"payload","fieldType":"msg","format":"text","syntax":"plain",
+"template":"{\"type\":\"RECORD\",\"stream\":\"cars\",\"record\":{\"carModel\":\"Audi\",\"price\":\"10000\",\"color\":\"blue\"}}\n{\"type\":\"RECORD\",
+\"stream\":\"cars\",\"record\":{\"carModel\":\"BMW\",\"price\":\"15000\",\"color\":\"red\"}}","output":"str","x":180,"y":620,"wires":[["16687292eb745dab"]]},
+{"id":"5a22ef69893bbc79","type":"inject","z":"cd67672e19ab739a","name":"click to start","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"",
+"crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":150,"y":540,"wires":[["8b709063b40e4118"]]},{"id":"7e1608b8b0ea106d",
+"type":"gulpetl-target-csv","z":"cd67672e19ab739a","name":"","x":310,"y":680,"wires":[["78c3f5cdb1e7573f"]]},{"id":"16687292eb745dab","type":"template",
+"z":"cd67672e19ab739a","name":"Set config","field":"config","fieldType":"msg","format":"json","syntax":"plain","template":"{\n    \"quoted\":true,\n    
+\"header\":true\n}","output":"json","x":340,"y":620,"wires":[["7e1608b8b0ea106d"]]},{"id":"78c3f5cdb1e7573f","type":"debug","z":"cd67672e19ab739a","name":"debug",
+"active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","statusVal":"","statusType":"auto","x":570,"y":600,
+"wires":[]}]
+```
+
 ### Quick Start for Coding on This Plugin ##
 
 * Dependencies:
