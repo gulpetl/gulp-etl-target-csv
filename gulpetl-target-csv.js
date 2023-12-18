@@ -7,16 +7,29 @@ module.exports = function (RED) {
     RED.nodes.createNode(this, config);
     var node = this;
     node.on('input', function (msg) {
-      targetCsv.csvStringifyNdjson(msg.payload, msg.config)
-        .then((data) => {
-          msg.payload = data;
-        })
-        .catch((err) => {
-          node.error(err.message);
-        })
-        .finally(() => {
-          node.send(msg);
-        })
+      let configObj = targetCsv.extractConfig(null/*local.config*/, msg.config);
+
+      if (!msg.topic?.startsWith("gulp")) {
+
+        targetCsv.csvStringifyNdjson(msg.payload, configObj)
+          .then((data) => {
+            msg.payload = data;
+          })
+          .catch((err) => {
+            node.error(err.message);
+          })
+          .finally(() => {
+            node.send(msg);
+          })
+      }
+      else {
+        if (msg.topic == "gulp-initialize") {
+          msg.plugins.push({ name: config.type, init: () => targetCsv.targetCsv(configObj) });
+        }
+
+        node.send(msg);
+      }
+
     })
   }
 

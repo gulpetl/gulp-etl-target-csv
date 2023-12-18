@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.targetCsv = exports.csvStringifyNdjson = exports.extractRecordObjFromMessageString = void 0;
+exports.targetCsv = exports.csvStringifyNdjson = exports.extractConfig = exports.extractRecordObjFromMessageString = void 0;
 const through2 = require('through2');
 const PluginError = require("plugin-error");
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
@@ -38,6 +38,34 @@ function extractRecordObjFromMessageString(messageLine) {
     return recordObj.record || null; // if record doesn't exist, we return null
 }
 exports.extractRecordObjFromMessageString = extractRecordObjFromMessageString;
+let localDefaultConfigObj = { header: true };
+/**
+ * Merges config information for this plugin from all potential sources
+ * @param specificConfigObj A configObj set specifically for this plugin
+ * @param pipelineConfigObj A "super" configObj (e.g. file.data or msg.config) for the whole pipeline which may/may not apply to this plugin; if it
+ * does, its parameters override any matching ones from specificConfigObj.
+ * @param defaultConfigObj A default configObj, whose parameters are overridden by all others
+ */
+function extractConfig(specificConfigObj, pipelineConfigObj, defaultConfigObj = localDefaultConfigObj) {
+    let configObj;
+    try {
+        if (pipelineConfigObj) {
+            // look for a property based on our plugin's name; assumes a complex object meant for multiple plugins
+            let dataObj = pipelineConfigObj[PLUGIN_NAME];
+            // if we didn't find a config above, use the entire file.data object as our config
+            if (!dataObj)
+                dataObj = pipelineConfigObj;
+            // merge superConfigObj config into our passed-in origConfigObj
+            // merge.recursive(origConfigObj, dataObj); // <-- huge bug: can't mess with origConfigObj, because changes there will bleed into subsequent calls
+            configObj = merge_1.default.recursive(true, defaultConfigObj, specificConfigObj, dataObj);
+        }
+        else
+            configObj = merge_1.default.recursive(true, defaultConfigObj, specificConfigObj);
+    }
+    catch (_a) { }
+    return configObj;
+}
+exports.extractConfig = extractConfig;
 /**
  * Converts an [ndjson](https://ndjson.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
  * @param ndjsonLines May be a string or Buffer representing ndjson lines, or an array of json strings or an array of objects
@@ -83,24 +111,7 @@ function targetCsv(origConfigObj) {
     // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
     // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
     const strm = through2.obj(function (file, encoding, cb) {
-        let configObj;
-        try {
-            if (file.data) {
-                // look for a property based on our plugin's name; assumes a complex object meant for multiple plugins
-                let dataObj = file.data[PLUGIN_NAME];
-                // if we didn't find a config above, use the entire file.data object as our config
-                if (!dataObj)
-                    dataObj = file.data;
-                // merge file.data config into our passed-in origConfigObj
-                // merge.recursive(origConfigObj, dataObj); // <-- huge bug: can't mess with origConfigObj, because changes there will bleed into subsequent calls
-                configObj = merge_1.default.recursive(true, origConfigObj, dataObj);
-            }
-            else
-                configObj = merge_1.default.recursive(true, origConfigObj);
-        }
-        catch (_a) { }
-        if (configObj.header === undefined)
-            configObj.header = true; // we default header to true, the expected default behavior for general usage
+        let configObj = extractConfig(origConfigObj, file.data);
         const self = this;
         let returnErr = null;
         file.path = replaceExt(file.path, '.csv');

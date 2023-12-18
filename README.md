@@ -44,10 +44,7 @@ allows data/options from the pipeline to be used to create options passed to thi
 See the demonstration in `debug/gulpfile.ts` for usage examples.
 
 ### Node-RED ###
-[Node-RED](https://nodered.org/) is a low-code, visual programming environment for event-driven applications. We're experimenting with it, and this plugin is now available as a Node-RED node. Since we're still in test mode, we aren't yet available in Node-RED's Palette; add to Node-RED by going to your user folder and typing:
-```
-npm install gulp-etl-target-csv
-```
+[Node-RED](https://nodered.org/) is a low-code, visual programming environment for event-driven applications. Install this node under Manage Palette, look for `gulp-etl-target-csv`
 
 #### Demo flow ####
 
@@ -72,16 +69,13 @@ The config is also set in a Template node. Identical to the `configObj` above, i
 Copy this flow here for import in Node-RED under `Import`
 
 ``` json
-[{"id":"8b709063b40e4118","type":"template","z":"cd67672e19ab739a","name":"Set data","field":"payload","fieldType":"msg","format":"text","syntax":"plain",
-"template":"{\"type\":\"RECORD\",\"stream\":\"cars\",\"record\":{\"carModel\":\"Audi\",\"price\":\"10000\",\"color\":\"blue\"}}\n{\"type\":\"RECORD\",
-\"stream\":\"cars\",\"record\":{\"carModel\":\"BMW\",\"price\":\"15000\",\"color\":\"red\"}}","output":"str","x":180,"y":620,"wires":[["16687292eb745dab"]]},
-{"id":"5a22ef69893bbc79","type":"inject","z":"cd67672e19ab739a","name":"click to start","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"",
-"crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":150,"y":540,"wires":[["8b709063b40e4118"]]},{"id":"7e1608b8b0ea106d",
-"type":"gulpetl-target-csv","z":"cd67672e19ab739a","name":"","x":310,"y":680,"wires":[["78c3f5cdb1e7573f"]]},{"id":"16687292eb745dab","type":"template",
-"z":"cd67672e19ab739a","name":"Set config","field":"config","fieldType":"msg","format":"json","syntax":"plain","template":"{\n    \"quoted\":true,\n    
-\"header\":true\n}","output":"json","x":340,"y":620,"wires":[["7e1608b8b0ea106d"]]},{"id":"78c3f5cdb1e7573f","type":"debug","z":"cd67672e19ab739a","name":"debug",
-"active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","statusVal":"","statusType":"auto","x":570,"y":600,
-"wires":[]}]
+[{"id":"8b709063b40e4118","type":"template","z":"cd67672e19ab739a","name":"Set data","field":"payload","fieldType":"msg"
+,"format":"text","syntax":"plain","template":"{\"type\":\"RECORD\",\"stream\":\"cars\",\"record\":{\"carModel\":\"Audi\",\"price\":\"10000\",\"color\":\"blue\"}}\n{\"type\":\"RECORD\",\"stream\":\"cars\",\"record\":{\"carModel\":\"BMW\",\"price\":\"15000\",\"color\":\"red\"}}","output":"str","x":180,"y":620,"wires":[["16687292eb745dab"]]},{"id"
+:"5a22ef69893bbc79","type":"inject","z":"cd67672e19ab739a","name":"click to start","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x"
+:150,"y":540,"wires":[["8b709063b40e4118"]]},{"id":"7e1608b8b0ea106d","type":"gulpetl-target-csv","z":"cd67672e19ab739a","name":"","x":310,"y":680,"wires":[["78c3f5cdb1e7573f"]]},{"id":"16687292eb745dab","type":"template","z"
+:"cd67672e19ab739a","name":"Set config","field":"config","fieldType":"msg","format":"json","syntax":"plain","template":"{\n    \"quoted\":true,\n\"header\":true\n}","output":"json","x":340,"y":620,"wires":[["7e1608b8b0ea106d"]]},{"id"
+:"78c3f5cdb1e7573f","type":"debug","z":"cd67672e19ab739a","name":"debug","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"payload","targetType":"msg","statusVal":"",
+"statusType":"auto","x":570,"y":600,"wires":[]}]
 ```
 
 ### Quick Start for Coding on This Plugin ##

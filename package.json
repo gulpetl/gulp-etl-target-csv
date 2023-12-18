@@ -21,14 +21,17 @@
     "gulpplugin",
     "csv",
     "gulp-etl",
-    "data"
+    "gulpetl",
+    "etl",
+    "data",
+    "node-red"
   ],
   "node-red": {
     "nodes": {
       "gulpetl-target-csv": "gulpetl-target-csv.js"
     }
   },
-  "homepage": "https://gulpetl.com",
+  "homepage": "https://docs.gulpetl.com",
   "dependencies": {
     "csv-stringify": "^5.6.5",
     "gulp-error-handle": "^1.0.1",
@@ -42,6 +45,7 @@
     "vinyl": "^2.2.1"
   },
   "devDependencies": {
+    "@types/gulp": "^4.0.17",
     "@types/jest": "^23.3.14",
     "@types/node": "^10.17.60",
     "@types/replace-ext": "0.0.27",

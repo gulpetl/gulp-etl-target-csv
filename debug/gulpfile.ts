@@ -33,18 +33,18 @@ function runtargetCsv(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
   return gulp.src('../testdata/*.ndjson', { buffer: gulpBufferMode })
-    .on('data', function (file: Vinyl) {
-      log.info('Adding options via gulp-data API (file.data) to ' + file.basename + "...")
-      file.data = { header: false }
-    })
-    .on('data', function (file: Vinyl) {
-      log.info('...or, setting file.data this way allows you to set options for multiple plugins in the same pipeline without conflicts')
-      let allOptions = file.data || {}; // set allOptions to existing file.data or, if none exists, set to an empty object
-      allOptions["gulp-etl-target-csv"] = { header: true }; // set options on file.data for a specific plugin. This will override the more general settings above.
-    })
-    .on('data', function (file: Vinyl) {
-      log.info('Starting processing on ' + file.basename)
-    })
+    // .on('data', function (file: Vinyl) {
+    //   log.info('Adding options via gulp-data API (file.data) to ' + file.basename + "...")
+    //   file.data = { header: false }
+    // })
+    // .on('data', function (file: Vinyl) {
+    //   log.info('...or, setting file.data this way allows you to set options for multiple plugins in the same pipeline without conflicts')
+    //   let allOptions = file.data || {}; // set allOptions to existing file.data or, if none exists, set to an empty object
+    //   allOptions["gulp-etl-target-csv"] = { header: true }; // set options on file.data for a specific plugin. This will override the more general settings above.
+    // })
+    // .on('data', function (file: Vinyl) {
+    //   log.info('Starting processing on ' + file.basename)
+    // })
     .pipe(targetCsv({ quoted_string: true }))
     // errorHandler isn't working..? For now we use ".on('error')"
     // .pipe(errorHandler(function (err: any) {
