@@ -1,6 +1,6 @@
 {
   "name": "gulp-etl-target-csv",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "repository": "https://github.com/gulpetl/gulp-etl-target-csv",
   "description": "Convert .ndjson gulp-etl files to CSV",
   "main": "dist/js/plugin.js",
