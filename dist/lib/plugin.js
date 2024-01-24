@@ -9,9 +9,9 @@ const loglevel_1 = require("loglevel");
 const log = loglevel_1.default.getLogger(PLUGIN_NAME); // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn'));
 const replaceExt = require("replace-ext");
-const csvStringify = require('csv-stringify');
+const csv_stringify_1 = require("csv-stringify");
 const split = require('split2');
-const transform = require('stream-transform');
+const stream_transform_1 = require("stream-transform");
 const merge_1 = require("merge");
 /**
  * Parse a [Message Stream](https://docs.gulpetl.com/concepts/message-streams) RECORD line into an object (if needed) and then return
@@ -89,7 +89,7 @@ function csvStringifyNdjson(ndjsonLines, configObj = {}) {
                 if (tempLine)
                     recordObjectArr.push(tempLine);
             }
-            csvStringify(recordObjectArr, configObj, function (err, data) {
+            (0, csv_stringify_1.stringify)(recordObjectArr, configObj, function (err, data) {
                 // this callback function runs when csvStringify finishes its work; data is a string containing CSV lines
                 log.debug("csv-stringify data:", data);
                 if (err)
@@ -138,7 +138,7 @@ function targetCsv(origConfigObj) {
                 // split plugin will split the file into lines
                 .pipe(split())
                 // use a node transform stream to parse each line into an object and extract its main `record` property
-                .pipe(transform(extractRecordObjFromMessageString))
+                .pipe((0, stream_transform_1.transform)(extractRecordObjFromMessageString))
                 .on('end', function () {
                 // DON'T CALL THIS HERE. It MAY work, if the job is small enough. But it needs to be called after the stream is SET UP, not when the streaming is DONE.
                 // Calling the callback here instead of below may result in data hanging in the stream--not sure of the technical term, but dest() creates no file, or the file is blank
@@ -153,7 +153,7 @@ function targetCsv(origConfigObj) {
                 log.error(err);
                 self.emit('error', new PluginError(PLUGIN_NAME, err));
             })
-                .pipe(csvStringify(configObj));
+                .pipe((0, csv_stringify_1.stringify)(configObj));
             // after our stream is set up (not necesarily finished) we call the callback
             log.debug('calling callback');
             cb(returnErr, file);

@@ -8,7 +8,7 @@ log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
 // const pluginLog = loglevel.getLogger(PLUGIN_NAME)
 // pluginLog.setLevel('debug')
 
-const errorHandler = require('gulp-error-handle'); // handle all errors in one handler, but still stop the stream if there are errors
+// const errorHandler = require('gulp-error-handle'); // handle all errors in one handler, but still stop the stream if there are errors
 
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
 const PLUGIN_NAME = module.exports.name;

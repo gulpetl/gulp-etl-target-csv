@@ -8,9 +8,9 @@ const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on th
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
 import replaceExt = require('replace-ext')
 
-const csvStringify = require('csv-stringify')
+import { stringify } from 'csv-stringify';
 const split = require('split2')
-const transform = require('stream-transform')
+import { transform } from 'stream-transform';
 import merge from 'merge';
 
 /**
@@ -94,7 +94,7 @@ export function csvStringifyNdjson(ndjsonLines: string | Buffer | Array<string> 
           recordObjectArr.push(tempLine);
       }
 
-      csvStringify(recordObjectArr, configObj, function (err: any, data: string) {
+      stringify(recordObjectArr, configObj, function (err: any, data: string) {
         // this callback function runs when csvStringify finishes its work; data is a string containing CSV lines
         log.debug("csv-stringify data:",data);
         if (err) reject(new PluginError(PLUGIN_NAME, err))
@@ -162,7 +162,7 @@ export function targetCsv(origConfigObj: any) {
           log.error(err)
           self.emit('error', new PluginError(PLUGIN_NAME, err));
         })
-        .pipe(csvStringify(configObj))
+        .pipe(stringify(configObj))
 
       // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')
