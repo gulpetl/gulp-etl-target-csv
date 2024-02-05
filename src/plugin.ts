@@ -2,7 +2,7 @@ const through2 = require('through2')
 import Vinyl = require('vinyl')
 import PluginError = require('plugin-error');
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
-const PLUGIN_NAME = module.exports.name;
+export const PLUGIN_NAME = module.exports.name;
 import loglevel from 'loglevel';
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
@@ -11,7 +11,9 @@ import replaceExt = require('replace-ext')
 import { stringify } from 'csv-stringify';
 const split = require('split2')
 import { transform } from 'stream-transform';
-import merge from 'merge';
+import { extractConfig } from '@gulpetl/node-red-core';
+
+export let localDefaultConfigObj: any = { header: true }; // default CSV header export to true
 
 /**
  * Parse a [Message Stream](https://docs.gulpetl.com/concepts/message-streams) RECORD line into an object (if needed) and then return 
@@ -39,33 +41,6 @@ export function extractRecordObjFromMessageString(messageLine: string | object):
   }
 
   return recordObj.record || null; // if record doesn't exist, we return null
-}
-
-let localDefaultConfigObj: any = {header:true};
-/**
- * Merges config information for this plugin from all potential sources
- * @param specificConfigObj A configObj set specifically for this plugin
- * @param pipelineConfigObj A "super" configObj (e.g. file.data or msg.config) for the whole pipeline which may/may not apply to this plugin; if it
- * does, its parameters override any matching ones from specificConfigObj.
- * @param defaultConfigObj A default configObj, whose parameters are overridden by all others
- */
-export function extractConfig(specificConfigObj:any, pipelineConfigObj?:any, defaultConfigObj:any = localDefaultConfigObj) : any {
-  let configObj: any;
-  try {
-    if (pipelineConfigObj) {
-      // look for a property based on our plugin's name; assumes a complex object meant for multiple plugins
-      let dataObj = pipelineConfigObj[PLUGIN_NAME];
-      // if we didn't find a config above, use the entire file.data object as our config
-      if (!dataObj) dataObj = pipelineConfigObj;
-      // merge superConfigObj config into our passed-in origConfigObj
-      // merge.recursive(origConfigObj, dataObj); // <-- huge bug: can't mess with origConfigObj, because changes there will bleed into subsequent calls
-      configObj = merge.recursive(true, defaultConfigObj, specificConfigObj, dataObj, );
-    }
-    else
-      configObj = merge.recursive(true, defaultConfigObj, specificConfigObj);
-  }
-  catch { }
-  return configObj;
 }
 
 /**
@@ -96,7 +71,7 @@ export function csvStringifyNdjson(ndjsonLines: string | Buffer | Array<string> 
 
       stringify(recordObjectArr, configObj, function (err: any, data: string) {
         // this callback function runs when csvStringify finishes its work; data is a string containing CSV lines
-        log.debug("csv-stringify data:",data);
+        log.debug("csv-stringify data:", data);
         if (err) reject(new PluginError(PLUGIN_NAME, err))
         else resolve(data);
       })
@@ -116,8 +91,8 @@ export function targetCsv(origConfigObj: any) {
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
   const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
 
-    let configObj:any = extractConfig(origConfigObj, file.data);
-    
+    let configObj: any = extractConfig(origConfigObj, file.data, PLUGIN_NAME, localDefaultConfigObj);
+
     const self = this
     let returnErr: any = null
 
@@ -129,10 +104,10 @@ export function targetCsv(origConfigObj: any) {
     }
     else if (file.isBuffer()) {
       csvStringifyNdjson(file.contents, configObj)
-        .then((data:any) => {
+        .then((data: any) => {
           file.contents = Buffer.from(data)
         })
-        .catch((err:any) => {
+        .catch((err: any) => {
           returnErr = new PluginError(PLUGIN_NAME, err);
         })
         .finally(() => {

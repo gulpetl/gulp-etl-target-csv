@@ -1,18 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.targetCsv = exports.csvStringifyNdjson = exports.extractConfig = exports.extractRecordObjFromMessageString = void 0;
+exports.targetCsv = exports.csvStringifyNdjson = exports.extractRecordObjFromMessageString = exports.localDefaultConfigObj = exports.PLUGIN_NAME = void 0;
 const through2 = require('through2');
 const PluginError = require("plugin-error");
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
-const PLUGIN_NAME = module.exports.name;
+exports.PLUGIN_NAME = module.exports.name;
 const loglevel_1 = require("loglevel");
-const log = loglevel_1.default.getLogger(PLUGIN_NAME); // get a logger instance based on the project name
+const log = loglevel_1.default.getLogger(exports.PLUGIN_NAME); // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn'));
 const replaceExt = require("replace-ext");
 const csv_stringify_1 = require("csv-stringify");
 const split = require('split2');
 const stream_transform_1 = require("stream-transform");
-const merge_1 = require("merge");
+const node_red_core_1 = require("@gulpetl/node-red-core");
+exports.localDefaultConfigObj = { header: true }; // default CSV header export to true
 /**
  * Parse a [Message Stream](https://docs.gulpetl.com/concepts/message-streams) RECORD line into an object (if needed) and then return
  * the `record` property, or return null if no `record` exists (e.g. for a STATE line); if we were called by a transform stream,
@@ -38,34 +39,6 @@ function extractRecordObjFromMessageString(messageLine) {
     return recordObj.record || null; // if record doesn't exist, we return null
 }
 exports.extractRecordObjFromMessageString = extractRecordObjFromMessageString;
-let localDefaultConfigObj = { header: true };
-/**
- * Merges config information for this plugin from all potential sources
- * @param specificConfigObj A configObj set specifically for this plugin
- * @param pipelineConfigObj A "super" configObj (e.g. file.data or msg.config) for the whole pipeline which may/may not apply to this plugin; if it
- * does, its parameters override any matching ones from specificConfigObj.
- * @param defaultConfigObj A default configObj, whose parameters are overridden by all others
- */
-function extractConfig(specificConfigObj, pipelineConfigObj, defaultConfigObj = localDefaultConfigObj) {
-    let configObj;
-    try {
-        if (pipelineConfigObj) {
-            // look for a property based on our plugin's name; assumes a complex object meant for multiple plugins
-            let dataObj = pipelineConfigObj[PLUGIN_NAME];
-            // if we didn't find a config above, use the entire file.data object as our config
-            if (!dataObj)
-                dataObj = pipelineConfigObj;
-            // merge superConfigObj config into our passed-in origConfigObj
-            // merge.recursive(origConfigObj, dataObj); // <-- huge bug: can't mess with origConfigObj, because changes there will bleed into subsequent calls
-            configObj = merge_1.default.recursive(true, defaultConfigObj, specificConfigObj, dataObj);
-        }
-        else
-            configObj = merge_1.default.recursive(true, defaultConfigObj, specificConfigObj);
-    }
-    catch (_a) { }
-    return configObj;
-}
-exports.extractConfig = extractConfig;
 /**
  * Converts an [ndjson](https://ndjson.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
  * @param ndjsonLines May be a string or Buffer representing ndjson lines, or an array of json strings or an array of objects
@@ -93,13 +66,13 @@ function csvStringifyNdjson(ndjsonLines, configObj = {}) {
                 // this callback function runs when csvStringify finishes its work; data is a string containing CSV lines
                 log.debug("csv-stringify data:", data);
                 if (err)
-                    reject(new PluginError(PLUGIN_NAME, err));
+                    reject(new PluginError(exports.PLUGIN_NAME, err));
                 else
                     resolve(data);
             });
         }
         catch (err) {
-            reject(new PluginError(PLUGIN_NAME, err));
+            reject(new PluginError(exports.PLUGIN_NAME, err));
         }
     });
 }
@@ -111,7 +84,7 @@ function targetCsv(origConfigObj) {
     // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
     // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
     const strm = through2.obj(function (file, encoding, cb) {
-        let configObj = extractConfig(origConfigObj, file.data);
+        let configObj = (0, node_red_core_1.extractConfig)(origConfigObj, file.data, exports.PLUGIN_NAME, exports.localDefaultConfigObj);
         const self = this;
         let returnErr = null;
         file.path = replaceExt(file.path, '.csv');
@@ -125,7 +98,7 @@ function targetCsv(origConfigObj) {
                 file.contents = Buffer.from(data);
             })
                 .catch((err) => {
-                returnErr = new PluginError(PLUGIN_NAME, err);
+                returnErr = new PluginError(exports.PLUGIN_NAME, err);
             })
                 .finally(() => {
                 // we are done with file processing. Pass the processed file along
@@ -151,7 +124,7 @@ function targetCsv(origConfigObj) {
                 // })
                 .on('error', function (err) {
                 log.error(err);
-                self.emit('error', new PluginError(PLUGIN_NAME, err));
+                self.emit('error', new PluginError(exports.PLUGIN_NAME, err));
             })
                 .pipe((0, csv_stringify_1.stringify)(configObj));
             // after our stream is set up (not necesarily finished) we call the callback

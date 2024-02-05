@@ -5,7 +5,8 @@
         // color: '#F9258E',
         color: '#3386BB',
         defaults: {
-            name: {value:""}
+            name: {value:""},
+            config: {value:""}
         },
         inputs: 1,
         outputs: 1,
@@ -18,7 +19,50 @@
             // use small non-breaking dash character for visual presentation-- avoids the breaks node-red inserts around regular dashes in the palette - https://www.compart.com/en/unicode/category/Pd
             return "target-csv".replace("-","\u2011");
         },        
-        align:"right"
+        align:"right",
+        oneditprepare: function () {
+            const that = this;
+            const configStateId = RED.editor.generateViewStateId("node", this, "");
+            this.configEditor = RED.editor.createEditor({
+                id: 'node-input-config-editor',
+                mode: 'ace/mode/json',
+                value: $("#node-input-config").val(),
+                stateId: configStateId
+            });
+            RED.popover.tooltip($("#node-template-expand-config-editor"), RED._("node-red:common.label.expand"));
+            $("#node-template-expand-config-editor").on("click", function (e) {
+                e.preventDefault();
+                const value = that.configEditor.getValue();
+                that.configEditor.saveView();
+                RED.editor.editText({
+                    // mode: $("#node-input-format").val(),
+                    value: value,
+                    stateId: configStateId,
+                    width: "Infinity",
+                    focus: true,
+                    complete: function (v, cursor) {
+                        that.configEditor.setValue(v, -1);
+                        setTimeout(function () {
+                            that.configEditor.restoreView();
+                            that.configEditor.focus();
+                        }, 250);
+                    }
+                })
+            })
+        },
+        oneditsave: function () {
+
+            try {
+                $("#node-input-config").val(this.configEditor.getValue());
+                this.configEditor.destroy();
+                delete this.configEditor;
+            }
+            catch { }
+        },
+        oneditcancel: function () {
+            this.configEditor.destroy();
+            delete this.configEditor;
+        },
     });
 </script>
 
@@ -26,6 +70,16 @@
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row" style="position: relative; margin-bottom: 0px;">
+        <label for="node-input-config"><i class="fa fa-file-code-o"></i> <span>Config</span></label>
+        <input type="hidden" id="node-input-config" autofocus="autofocus">        
+        <div style="position: absolute; right:0;display:inline-block; text-align: right; font-size: 0.8em;">
+            <button type="button" id="node-template-expand-config-editor" class="red-ui-button red-ui-button-small"><i class="fa fa-expand"></i></button>
+        </div>
+        <div class="form-row node-text-editor-row">
+            <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-config-editor" ></div>
+        </div>
     </div>
 </script>
 
