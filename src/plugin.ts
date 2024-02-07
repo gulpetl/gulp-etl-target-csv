@@ -91,7 +91,7 @@ export function targetCsv(origConfigObj: any) {
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
   const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
 
-    let configObj: any = extractConfig(origConfigObj, file.data, PLUGIN_NAME, localDefaultConfigObj);
+    let configObj: any = extractConfig(undefined, file.data, PLUGIN_NAME, origConfigObj, localDefaultConfigObj);
 
     const self = this
     let returnErr: any = null

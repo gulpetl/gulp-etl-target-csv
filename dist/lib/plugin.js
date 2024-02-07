@@ -84,7 +84,7 @@ function targetCsv(origConfigObj) {
     // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
     // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
     const strm = through2.obj(function (file, encoding, cb) {
-        let configObj = (0, node_red_core_1.extractConfig)(origConfigObj, file.data, exports.PLUGIN_NAME, exports.localDefaultConfigObj);
+        let configObj = (0, node_red_core_1.extractConfig)(undefined, file.data, exports.PLUGIN_NAME, origConfigObj, exports.localDefaultConfigObj);
         const self = this;
         let returnErr = null;
         file.path = replaceExt(file.path, '.csv');

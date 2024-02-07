@@ -33,7 +33,7 @@
   },
   "homepage": "https://docs.gulpetl.com",
   "dependencies": {
-    "@gulpetl/node-red-core": "^0.0.7",
+    "@gulpetl/node-red-core": "^0.0.9",
     "csv-stringify": "^6.4.5",
     "loglevel": "^1.8.1",
     "pkginfo": "^0.4.1",
