@@ -1,7 +1,7 @@
 import { extractRecordObjFromMessageString } from '../src/plugin'
 
 /**
- * Run this plugin on an .ndjson file, converting it to a .csv file. As a wrapper for csv-stringify, the only real logic
+ * Run this plugin on an .jsonl file, converting it to a .csv file. As a wrapper for csv-stringify, the only real logic
  * in this plugin in `extractRecordObjFromMessageString`, which parses incoming string lines into objects and returns 
  * only the part of the object that csv-stringify should export.
  * 
@@ -13,7 +13,7 @@ export function runWithoutGulp() {
     const csvStringify = require('csv-stringify');
     const transform = require('stream-transform')
 
-    return require('fs').createReadStream('./testdata/cars.ndjson', { encoding: "utf8" })
+    return require('fs').createReadStream('./testdata/cars.jsonl', { encoding: "utf8" })
         .pipe(split()) // split the stream into individual lines
         .on("data", (data: any) => {
             console.log(data)

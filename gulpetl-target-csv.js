@@ -1,5 +1,5 @@
 // const targetCsv = require('./src/plugin'); // Error: Cannot find module './src/plugin'
-// import { csvStringifyNdjson } from 'gulp-etl-target-csv'; // SyntaxError: Cannot use import statement outside a module (line:2)
+// import { csvStringifyJsonl } from 'gulp-etl-target-csv'; // SyntaxError: Cannot use import statement outside a module (line:2)
 const targetCsv = require('gulp-etl-target-csv');
 const extractConfig = require('@gulpetl/node-red-core').extractConfig;
 
@@ -26,7 +26,7 @@ module.exports = function (RED) {
 
       if (!msg.topic?.startsWith("gulp")) {
 
-        targetCsv.csvStringifyNdjson(msg.payload, configObj)
+        targetCsv.csvStringifyJsonl(msg.payload, configObj)
           .then((data) => {
             msg.payload = data;
           })

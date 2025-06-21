@@ -2,9 +2,9 @@
 
 This plugin creates CSV files from **gulp-etl** **Message Stream** files; originally adapted from the [gulp-etl-handlelines](https://github.com/gulpetl/gulp-etl-handlelines) model plugin. It is a **gulp-etl** wrapper for [csv-stringify](https://csv.js.org/stringify/).
 
-This is a **[gulp-etl](https://gulpetl.com/)** plugin, and as such it is a [gulp](https://gulpjs.com/) plugin. **gulp-etl** plugins work with [ndjson](http://ndjson.org/) data streams/files which we call **Message Streams** and which are compliant with the [Singer specification](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#output). Message Streams look like this:
+This is a **[gulp-etl](https://gulpetl.com/)** plugin, and as such it is a [gulp](https://gulpjs.com/) plugin. **gulp-etl** plugins work with [jsonl](http://jsonlines.org/) data streams/files which we call **Message Streams** and which are compliant with the [Singer specification](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#output). Message Streams look like this:
 
-``` ndjson
+``` jsonl
 {"type": "SCHEMA", "stream": "users", "key_properties": ["id"], "schema": {"required": ["id"], "type": "object", "properties": {"id": {"type": "integer"}}}}
 {"type": "RECORD", "stream": "users", "record": {"id": 1, "name": "Chris"}}
 {"type": "RECORD", "stream": "users", "record": {"id": 2, "name": "Mike"}}
@@ -25,7 +25,7 @@ var gulp = require('gulp')
 var targetCsv = require('gulp-etl-target-csv').targetCsv
 
 exports.default = function() {
-    return gulp.src('data/*.ndjson')
+    return gulp.src('data/*.jsonl')
     .on('data', function (file) {
         console.log('Starting processing on ' + file.basename)
     })  
@@ -52,9 +52,9 @@ See the demonstration in `debug/gulpfile.ts` for usage examples.
 
 #### Set data ####
 
-For our demo, we set the data in a "Set data" Template node. The data should be valid NDJSON records, output as plain text:
+For our demo, we set the data in a "Set data" Template node. The data should be valid JSONL records, output as plain text:
 
-``` ndjson
+``` jsonl
 {"type":"RECORD","stream":"cars","record":{"carModel":"Audi","price":"10000","color":"blue"}}
 {"type":"RECORD","stream":"cars","record":{"carModel":"BMW","price":"15000","color":"red"}}
 ```

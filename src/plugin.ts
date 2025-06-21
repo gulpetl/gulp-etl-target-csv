@@ -44,23 +44,23 @@ export function extractRecordObjFromMessageString(messageLine: string | object):
 }
 
 /**
- * Converts an [ndjson](https://ndjson.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
- * @param ndjsonLines May be a string or Buffer representing ndjson lines, or an array of json strings or an array of objects 
+ * Converts an [jsonl](https://jsonlines.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
+ * @param jsonlLines May be a string or Buffer representing jsonl lines, or an array of json strings or an array of objects 
  * @param configObj [CSV Stringify options object](https://csv.js.org/stringify/options/); optional
  * @returns A string representation of the CSV lines
  */
-export function csvStringifyNdjson(ndjsonLines: string | Buffer | Array<string> | Array<object>, configObj: Object = {}): Promise<string> {
+export function csvStringifyJsonl(jsonlLines: string | Buffer | Array<string> | Array<object>, configObj: Object = {}): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       let linesArray;
       let recordObjectArr = [];
 
-      if (Buffer.isBuffer(ndjsonLines))
-        linesArray = ndjsonLines.toString().split('\n')
-      else if (typeof (ndjsonLines) == "string")
-        linesArray = ndjsonLines.split('\n')
+      if (Buffer.isBuffer(jsonlLines))
+        linesArray = jsonlLines.toString().split('\n')
+      else if (typeof (jsonlLines) == "string")
+        linesArray = jsonlLines.split('\n')
       else
-        linesArray = ndjsonLines; // should be an array of strings or objects
+        linesArray = jsonlLines; // should be an array of strings or objects
 
       // call extractRecordObjFromMessageString on each line
       for (let dataIdx in linesArray) {
@@ -103,7 +103,7 @@ export function targetCsv(origConfigObj: any) {
       return cb(returnErr, file)
     }
     else if (file.isBuffer()) {
-      csvStringifyNdjson(file.contents, configObj)
+      csvStringifyJsonl(file.contents, configObj)
         .then((data: any) => {
           file.contents = Buffer.from(data)
         })

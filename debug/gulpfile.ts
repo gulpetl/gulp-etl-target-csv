@@ -32,7 +32,7 @@ function switchToBuffer(callback: any) {
 function runtargetCsv(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
-  return gulp.src('../testdata/*.ndjson', { buffer: gulpBufferMode })
+  return gulp.src('../testdata/*.jsonl', { buffer: gulpBufferMode })
     .on('data', function (file: Vinyl) {
       log.info('Adding options via gulp-data API (file.data) to ' + file.basename + "...")
       file.data = { header: false }
