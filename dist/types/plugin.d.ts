@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export declare const PLUGIN_NAME: any;
 export declare let localDefaultConfigObj: any;
 /**
@@ -10,10 +9,10 @@ export declare let localDefaultConfigObj: any;
  */
 export declare function extractRecordObjFromMessageString(messageLine: string | object): object | null;
 /**
- * Converts an [ndjson](https://ndjson.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
- * @param ndjsonLines May be a string or Buffer representing ndjson lines, or an array of json strings or an array of objects
+ * Converts an [jsonl](https://jsonlines.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
+ * @param jsonlLines May be a string or Buffer representing jsonl lines, or an array of json strings or an array of objects
  * @param configObj [CSV Stringify options object](https://csv.js.org/stringify/options/); optional
  * @returns A string representation of the CSV lines
  */
-export declare function csvStringifyNdjson(ndjsonLines: string | Buffer | Array<string> | Array<object>, configObj?: Object): Promise<string>;
+export declare function csvStringifyJsonl(jsonlLines: string | Buffer | Array<string> | Array<object>, configObj?: Object): Promise<string>;
 export declare function targetCsv(origConfigObj: any): any;

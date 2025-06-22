@@ -1,6 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.targetCsv = exports.csvStringifyNdjson = exports.extractRecordObjFromMessageString = exports.localDefaultConfigObj = exports.PLUGIN_NAME = void 0;
+exports.localDefaultConfigObj = exports.PLUGIN_NAME = void 0;
+exports.extractRecordObjFromMessageString = extractRecordObjFromMessageString;
+exports.csvStringifyJsonl = csvStringifyJsonl;
+exports.targetCsv = targetCsv;
 const through2 = require('through2');
 const PluginError = require("plugin-error");
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
@@ -38,24 +41,23 @@ function extractRecordObjFromMessageString(messageLine) {
     }
     return recordObj.record || null; // if record doesn't exist, we return null
 }
-exports.extractRecordObjFromMessageString = extractRecordObjFromMessageString;
 /**
- * Converts an [ndjson](https://ndjson.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
- * @param ndjsonLines May be a string or Buffer representing ndjson lines, or an array of json strings or an array of objects
+ * Converts an [jsonl](https://jsonlines.org/) input into an array of objects and passes the array to csvStringify for conversion to CSV
+ * @param jsonlLines May be a string or Buffer representing jsonl lines, or an array of json strings or an array of objects
  * @param configObj [CSV Stringify options object](https://csv.js.org/stringify/options/); optional
  * @returns A string representation of the CSV lines
  */
-function csvStringifyNdjson(ndjsonLines, configObj = {}) {
+function csvStringifyJsonl(jsonlLines, configObj = {}) {
     return new Promise((resolve, reject) => {
         try {
             let linesArray;
             let recordObjectArr = [];
-            if (Buffer.isBuffer(ndjsonLines))
-                linesArray = ndjsonLines.toString().split('\n');
-            else if (typeof (ndjsonLines) == "string")
-                linesArray = ndjsonLines.split('\n');
+            if (Buffer.isBuffer(jsonlLines))
+                linesArray = jsonlLines.toString().split('\n');
+            else if (typeof (jsonlLines) == "string")
+                linesArray = jsonlLines.split('\n');
             else
-                linesArray = ndjsonLines; // should be an array of strings or objects
+                linesArray = jsonlLines; // should be an array of strings or objects
             // call extractRecordObjFromMessageString on each line
             for (let dataIdx in linesArray) {
                 let tempLine = extractRecordObjFromMessageString(linesArray[dataIdx]);
@@ -76,7 +78,6 @@ function csvStringifyNdjson(ndjsonLines, configObj = {}) {
         }
     });
 }
-exports.csvStringifyNdjson = csvStringifyNdjson;
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
@@ -93,7 +94,7 @@ function targetCsv(origConfigObj) {
             return cb(returnErr, file);
         }
         else if (file.isBuffer()) {
-            csvStringifyNdjson(file.contents, configObj)
+            csvStringifyJsonl(file.contents, configObj)
                 .then((data) => {
                 file.contents = Buffer.from(data);
             })
@@ -134,5 +135,4 @@ function targetCsv(origConfigObj) {
     });
     return strm;
 }
-exports.targetCsv = targetCsv;
 //# sourceMappingURL=plugin.js.map

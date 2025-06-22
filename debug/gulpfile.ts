@@ -1,6 +1,6 @@
 let gulp = require('gulp')
 import { targetCsv } from '../src/plugin'
-
+let data = require('gulp-data')
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger('gulpfile')
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
@@ -33,19 +33,25 @@ function runtargetCsv(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
   return gulp.src('../testdata/*.jsonl', { buffer: gulpBufferMode })
-    .on('data', function (file: Vinyl) {
+    // NOTE: used to use the .on('data') callback as a shortcut to set file.data, but sometimes it is called out of order, so now use actual gulp-data plugin
+    //  .on('data', function (file: Vinyl) {
+    //   log.info("'data' event for "  + file.basename + "...")
+    //   // file.data = { header: false }
+    // })
+    .pipe(data(function (file: Vinyl) {
       log.info('Adding options via gulp-data API (file.data) to ' + file.basename + "...")
-      file.data = { header: false }
-    })
-    .on('data', function (file: Vinyl) {
+      return { header: false }
+    }))
+    .pipe(data(function (file: Vinyl) {
       log.info('...or, setting file.data this way allows you to set options for multiple plugins in the same pipeline without conflicts')
       let allOptions = file.data || {}; // set allOptions to existing file.data or, if none exists, set to an empty object
       allOptions["gulp-etl-target-csv"] = { header: true }; // set options on file.data for a specific plugin. This will override the more general settings above.
-    })
+      return allOptions;
+    }))
     .on('data', function (file: Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })
-    .pipe(targetCsv({ quoted_string: true, header: false })) // header value here overridden by file.data settings
+    .pipe(targetCsv({ quoted_string: true, header: false })) // header value here overridden by file.data settings; quoted_string is still respected
     // errorHandler isn't working..? For now we use ".on('error')"
     // .pipe(errorHandler(function (err: any) {
     //   log.error('Error: ' + err)
